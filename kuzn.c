@@ -75,7 +75,7 @@ uint8_t pibox_inv[] = {
 		block[i] = pibox_inv[block[i]];		\
 } while(0)
 
-#define C_func(out, i, ctx) do {				\
+#define C_func(out, i, ctx) do {			\
 	memset((out), 0, sizeof(out));			\
 	out[15] = i;					\
 	L_func(out, out, ctx);				\
@@ -89,7 +89,7 @@ uint8_t pibox_inv[] = {
 
 #define LSXinv(out, in, c, ctx) do {			\
 	X_func(out, in, c);				\
-	Linv(out, out, ctx);				\
+	Linv_func(out, out, ctx);				\
 	Sinv_func(out);					\
 } while (0)
 
@@ -209,7 +209,7 @@ L_func(uint8_t *out, const uint8_t *in, const struct kuzn_ctx *ctx)
 }
 
 static void
-Linv(uint8_t *out, const uint8_t *in, const struct kuzn_ctx *ctx)
+Linv_func(uint8_t *out, const uint8_t *in, const struct kuzn_ctx *ctx)
 {
 	int i;
 
@@ -218,7 +218,7 @@ Linv(uint8_t *out, const uint8_t *in, const struct kuzn_ctx *ctx)
 }
 
 static void
-Ffunc(uint8_t *out, const uint8_t *in, const uint8_t *c, const struct kuzn_ctx *ctx)
+F_func(uint8_t *out, const uint8_t *in, const uint8_t *c, const struct kuzn_ctx *ctx)
 {
 	uint8_t tmp[16];
 
@@ -243,7 +243,7 @@ kuzn_expand_key(struct kuzn_ctx *ctx)
 		memcpy(ptr, ptr - 32, 32);
 		for (j = 0; j < 8; j++) {
 			C_func(C, 8*i + j + 1, ctx);
-			Ffunc(ptr, ptr, C, ctx);
+			F_func(ptr, ptr, C, ctx);
 		}
 		ptr += 32;
 	}
@@ -435,10 +435,10 @@ test_L(struct kuzn_ctx *ctx)
 	}
 
 	for (i = 4; i > 0; i--) {
-		Linv(buf, buf, ctx);
+		Linv_func(buf, buf, ctx);
 		ret = memcmp(buf, vals[i - 1], 16);
 		if (ret != 0) {
-			printf("Linv Fail. iter %d, key: \n", i);
+			printf("Linv_func Fail. iter %d, key: \n", i);
 			PRINT_BLOCK(buf);
 			PRINT_BLOCK(vals[i - 1]);
 			return 1;
