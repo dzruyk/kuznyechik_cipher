@@ -89,7 +89,7 @@ uint8_t pibox_inv[] = {
 
 #define LSXinv(out, in, c, ctx) do {			\
 	X_func(out, in, c);				\
-	Linv_func(out, out, ctx);				\
+	Linv_func(out, out, ctx);			\
 	Sinv_func(out);					\
 } while (0)
 
