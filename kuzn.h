@@ -3,6 +3,12 @@
 
 #define _KUZ_DEBUG
 
+#define KUZN_BLOCK_LEN	16
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct kuzn_ctx {
 	uint8_t polynomial;
 	uint8_t keys[10 * 16];
@@ -17,6 +23,10 @@ void kuzn_decrypt(struct kuzn_ctx *ctx, const uint8_t *in, uint8_t *out);
 
 #ifdef _KUZ_DEBUG
 int test_kuzn();
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

@@ -1,39 +1,73 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
 
+#include <assert.h>
+
 #include "kuzn.h"
 
-#define N_ITERATIONS 10000
+#define MULTIPLIER 1000
+#define DATA_SZ	1 * 1024 * 1024
 
 int
-main(int argc, const char *argv[])
+kuzn_encrypt_ecb(struct kuzn_ctx *ctx, uint8_t *in, uint8_t *out, size_t length)
+{
+	int i;
+
+	assert(ctx != NULL && in != NULL && out != NULL);
+
+	for (i = 0; i < length / KUZN_BLOCK_LEN; ++i) {
+		kuzn_encrypt(ctx, in, out);
+
+		in += KUZN_BLOCK_LEN;
+		out += KUZN_BLOCK_LEN;
+	}
+
+	return 0;
+}
+
+unsigned long
+gost_kuzn_timetest(int *cnt)
 {
 	struct kuzn_ctx ctx;
+	uint8_t *buf;	
 	int i;
-	clock_t start, elapsed;
+	time_t start, elapsed;
 
-	uint8_t buf[] = {
-		0x11, 0x22, 0x33, 0x44,
-		0x55, 0x66, 0x77, 0x00,
-		0xff, 0xee, 0xdd, 0xcc,
-		0xbb, 0xaa, 0x99, 0x88, 
-	};
+	*cnt = 0;
+	buf = malloc(DATA_SZ);
 
 	kuzn_context_init(&ctx);
 
 	start = clock();
-
-	for (i = 0; i < N_ITERATIONS; i++) {
-		kuzn_encrypt(&ctx, buf, buf);
+	while (clock() < start + CLOCKS_PER_SEC) {
+		kuzn_encrypt_ecb(&ctx, buf, buf, DATA_SZ);
+		(*cnt)++;
 	}
-	for (i = 0; i < N_ITERATIONS; i++) {
-		kuzn_decrypt(&ctx, buf, buf);
+
+	start = clock();
+	for (i = 0; i < *cnt; i++) {
+		kuzn_encrypt_ecb(&ctx, buf, buf, DATA_SZ);
 	}
 
 	elapsed = clock() - start;
 
-	printf("elapsed %d\n", elapsed);
+	free(buf);
+
+	//printf("before test %X cnt %X\n", elapsed, *cnt);
+	return (*cnt * CLOCKS_PER_SEC * MULTIPLIER) / elapsed;
+}
+
+int
+main(int argc, const char *argv[])
+{
+	unsigned long kuzntime;
+	int ncycles;
+
+	kuzntime = gost_kuzn_timetest(&ncycles);
+
+	printf("Gost kuzn %ld.%03ld mb/s. Cycles= %d\n", kuzntime / MULTIPLIER, kuzntime % MULTIPLIER, ncycles);
 
 	return 0;
 }
